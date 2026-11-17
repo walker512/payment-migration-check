@@ -52,8 +52,7 @@ ripgrep avoid exporting the synthetic private value in the tested configuration.
 ## Remaining boundaries
 
 No real merchant migration, provider sandbox transaction, payment credential or
-customer record was used. Windows execution, broad real-project precision/recall
-were not independently verified in this review. The
+customer record was used. Broad real-project precision/recall was not independently verified in this review. The
 explicit scope label is a user assertion, not proof of repository identity.
 Baseline files must be trusted. This is not a full security certification or a
 blanket release approval; finish applicable CI before
@@ -85,3 +84,19 @@ and all 15 cards in both layouts had no internal horizontal overflow.
 The original 33 tests passed after the CSS-only repair. This is responsive
 Chromium validation, not a physical mobile-device, Safari or accessibility audit.
 The final CLI hash above includes this reviewed CSS repair.
+
+## Cross-platform completion addendum
+
+A later independent CI review verified all four Windows/Linux, Python 3.10/3.13
+jobs succeeded on remote commit `4ebed55154e7005a43e1ac6049cb18f64fed51af`.
+See [the exact run](https://github.com/walker512/payment-migration-check-candidate/actions/runs/44004083987) and VALIDATION.md for coverage, the first-run
+failure, reviewed fixes and the Windows POSIX-only skip. The remote archive
+contained exactly the same 33 files and bytes as the reviewed local snapshot.
+
+Updated runtime/test SHA-256 after those reviewed fixes:
+- `migration_check/cli.py`: `910ac19954f3503776e1081c316fb7d8e7cfe820ae2e3b2c633637c7def2022b`
+- `tests/test_core.py`: `3f920e512d0f0c0b21b8de34494eae3061aed9faae24982b3e3a9555463543e1`
+
+Prior snapshot hashes above are retained as review history, not current-file
+identities. Public metadata and local commit identities were checked as
+walker512 only; no real customer data or credential material was included.

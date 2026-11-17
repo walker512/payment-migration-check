@@ -4,7 +4,7 @@
 
 Environment: Linux, Python 3.12. Synthetic data only.
 
-1. `python -m unittest discover -s tests -v`: **33 tests pass**.
+1. `python -m unittest discover -s tests -v`: **34 tests pass**.
 2. Source-run CLI on `examples/store` and `examples/profile.json`: exit 0, **2 files / 6 rule candidates**, 15 review tasks, no unknown silently converted to ready.
 3. A clean virtual environment, `python -m pip install .`: built and installed wheel successfully. This installation fetched the build dependency, not a runtime dependency.
 4. Installed `migration-check scan ...` invoked from `/tmp`, outside the source checkout: exit 0, same 6 candidates. This guards against accidentally depending on working-directory imports.
@@ -16,10 +16,29 @@ Environment: Linux, Python 3.12. Synthetic data only.
 - No live merchant migration, sandbox provider API call or real billing test was run. Synthetic source only demonstrates discovery and report behavior, not provider interoperability.
 - No measured precision/recall over real projects. Six demo categories are deliberate fixtures, **not** a general accuracy score. Generic identifiers such as `variant_id` and webhook names can yield false positives.
 - A real ripgrep subprocess comparison now exists over 12 synthetic files (see benchmarks/). It is not a field accuracy or human usability study. Detection ties equally configured ripgrep; domain-specific reporting is the narrower improvement. dodo-migrate comparison remains a scope comparison.
-- Windows/Python 3.10/3.13 jobs are configured but not run locally. A published CI result is still required before claiming those targets verified.
+- GitHub Actions verified Linux and Windows with Python 3.10 and 3.13. See the exact run below. This does not verify macOS, physical mobile devices or all supported Python/platform combinations.
 - Cloud Chromium visual review completed at a desktop viewport and embedded 390/320 CSS-pixel report viewports. Review found and fixed narrow-screen grid overflow. After repair, document scroll width equaled client width (378/378 and 308/308 with scrollbars), and no task card overflowed. This tests responsive layout, not physical mobile devices or Safari. Earlier standalone Playwright startup was blocked by sandbox socket restrictions; the existing authorized browser was used instead.
 - Official Migration Hub was scheduled for December 2, 2026 and unavailable at the policy review date. No claim is made to have tested it.
 
 ## Independent review gate
 
 Implementation self-tests are not independent review. Before release, a different reviewer should check behavior, scan boundaries, report leaks, input validation, packaging and README claims; rerun the suite; and examine the generated HTML in a browser. Any blockers must be fixed and retested. No automatic “audit passed” badge is provided.
+
+## Cross-platform CI verified
+
+[Four-job CI run](https://github.com/walker512/payment-migration-check-candidate/actions/runs/44004083987) passed on remote commit
+`4ebed55154e7005a43e1ac6049cb18f64fed51af`. All four jobs exercised unit
+tests, demo JSON/HTML output, package installation and the installed CLI version.
+Windows Python 3.10 logged 34 tests, OK with one POSIX-only FIFO skip; symlink
+file, symlink directory and output-symlink refusal tests all passed.
+
+The first real Python 3.10 run exposed an HTML f-string syntax incompatibility
+missed by local Python 3.12. Moving the empty-table fallback outside the f-string
+fixed it; independent review verified unchanged HTML output. A separate Windows
+fixture fix injects hostile report labels without creating forbidden filenames.
+The local AST feature-version smoke is not proof of Python 3.10 compatibility;
+the actual interpreter jobs above are the evidence.
+
+Downloaded remote archive: 33 files, no missing or extra files, and every byte
+matched the local audited runtime/source snapshot. Runtime dependencies remain
+empty. CI emitted action-runtime deprecation warnings but no test failures.
