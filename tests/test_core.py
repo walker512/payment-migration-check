@@ -80,6 +80,14 @@ class ScannerTests(unittest.TestCase):
         self.assertNotIn('<script>',page)
         self.assertIn('&lt;script&gt;',page)
         self.assertIn("default-src 'none'", page)
+    def test_empty_report_html_and_syntax_smoke(self):
+        import ast
+        page=render_html(self.report())
+        self.assertIn('<td colspan="4">No candidate identifiers found.',page)
+        package=Path(__file__).resolve().parents[1]/'migration_check'
+        for source in package.glob('*.py'):
+            # Best-effort parser smoke only; real Python 3.10 CI is authoritative.
+            ast.parse(source.read_text(encoding='utf-8'),feature_version=(3,10))
     def test_repeated_matches_bounded(self):
         self.put('a.js','createCheckout()\n'*100)
         self.assertEqual(len(self.report()['findings']),1)
