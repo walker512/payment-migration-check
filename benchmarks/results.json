@@ -1,0 +1,314 @@
+{
+  "fixture": "12 synthetic files: 8 positive, 4 negative; file-level confusion matrix",
+  "limitations": "Author-labelled fixture corpus, not field accuracy, usability or speed research. Same-rule rg gets the same matching knowledge as this scanner.",
+  "ripgrep_version": "ripgrep 15.2.0 (rev e89fff89ac)",
+  "ruleset_fingerprint": "b049065a08c742bdf7a6e9946d96badc749b0ef9fb9586f4bfd8c6c15c40415a",
+  "corpus_sha256": {
+    "01-sdk.ts": "4a073a68cf5f090cb2222d159d2e35fa03107a6e95722f4c810c5159a1388f22",
+    "02-overlay.js": "7acb92ad48811e3fb87f8f708aa64bc3bc950b72b8adc7c4e657d4adfacf2192",
+    "03-renewal.py": "2d7a50fb1757a25d8879f1f97a85db4acbb939ac2d045ea07bd06ef92de8bf61",
+    "04-license.ts": "eba227cefcacb7fc6dbfb5752c786b72bc3a1b88f1c31719568674325f3ab252",
+    "05-catalog.ts": "e2cab81737ff4b163069e0a3433454681f0be5ed6c4d82c0f853d04033b49c7d",
+    "06-affiliate.js": "842a36a0c2e25621326d9af0b5c6de025afc874973450ea5c66a7e89d70d27fb",
+    "07-python.py": "21f4250d803b1d031a36196575dc06ae5545d49b12d1d8d341495b5e570d9c88",
+    "08-dynamic.js": "10fe0dd96d24095eb31d6edc70cdb7a109ff3e7f49038a4e54a1f6222de14357",
+    "09-unrelated-signature.py": "031c42eb0bb2c93ce8e691b4a6f00a0db43a0466b8abfec834df6569594b25bf",
+    "10-unrelated-variant.py": "770c221de9174e55b960046abe78848964656648555e815a3553bf1f4e02bf68",
+    "11-comment.js": "4a53cf88253a1e09d305c5a080b5bbb263fe3bf0d034a7131fbc77f0f6d029aa",
+    "12-clean.py": "ba1a531f581d2e6094e978ed6f7aca7a8d92eeb62c6e7ad73ee692f7f18bc772"
+  },
+  "keyword_rg": {
+    "command": [
+      "rg",
+      "--no-heading",
+      "--line-number",
+      "--color",
+      "never",
+      "-i",
+      "lemonsqueezy",
+      "."
+    ],
+    "metrics": {
+      "TP": 5,
+      "FN": 3,
+      "FP": 1,
+      "TN": 3,
+      "missed": [
+        "03-renewal.py",
+        "04-license.ts",
+        "08-dynamic.js"
+      ],
+      "false_positives": [
+        "11-comment.js"
+      ]
+    },
+    "locations": [
+      {
+        "file": "02-overlay.js",
+        "line": 1
+      },
+      {
+        "file": "06-affiliate.js",
+        "line": 1
+      },
+      {
+        "file": "11-comment.js",
+        "line": 1
+      },
+      {
+        "file": "01-sdk.ts",
+        "line": 1
+      },
+      {
+        "file": "07-python.py",
+        "line": 1
+      },
+      {
+        "file": "05-catalog.ts",
+        "line": 1
+      }
+    ],
+    "synthetic_private_value_in_output": true
+  },
+  "same_rule_rg": {
+    "commands": [
+      [
+        "rg",
+        "--no-heading",
+        "--line-number",
+        "--only-matching",
+        "--color",
+        "never",
+        "-i",
+        "-e",
+        "\\b(?:from|import)\\s+lemonsqueezy\\b|@lemonsqueezy/lemonsqueezy\\.js|lemonSqueezySetup|api\\.lemonsqueezy\\.com/v1",
+        "."
+      ],
+      [
+        "rg",
+        "--no-heading",
+        "--line-number",
+        "--only-matching",
+        "--color",
+        "never",
+        "-i",
+        "-e",
+        "lemonsqueezy\\.com/(?:checkout|buy)|LemonSqueezy\\.(?:Setup|Url|Refresh)|createCheckout|lemon\\.js",
+        "."
+      ],
+      [
+        "rg",
+        "--no-heading",
+        "--line-number",
+        "--only-matching",
+        "--color",
+        "never",
+        "-i",
+        "-e",
+        "X-Signature|x-signature|order_created|subscription_(?:created|updated|cancelled|resumed|expired|payment_success|payment_failed|payment_recovered|payment_refunded|paused|unpaused)",
+        "."
+      ],
+      [
+        "rg",
+        "--no-heading",
+        "--line-number",
+        "--only-matching",
+        "--color",
+        "never",
+        "-i",
+        "-e",
+        "api\\.lemonsqueezy\\.com/v1/licenses|(?:activate|validate|deactivate)License|license_key_created|license_key_updated",
+        "."
+      ],
+      [
+        "rg",
+        "--no-heading",
+        "--line-number",
+        "--only-matching",
+        "--color",
+        "never",
+        "-i",
+        "-e",
+        "LEMON(?:SQUEEZY|_SQUEEZY)?_(?:PRODUCT|VARIANT|STORE)_ID|(?:get|list)(?:Products|Variants)|variant_id",
+        "."
+      ],
+      [
+        "rg",
+        "--no-heading",
+        "--line-number",
+        "--only-matching",
+        "--color",
+        "never",
+        "-i",
+        "-e",
+        "lemonsqueezy\\.com/affiliates|lemonSqueezyAffiliate|affiliate_tracking",
+        "."
+      ]
+    ],
+    "metrics": {
+      "TP": 7,
+      "FN": 1,
+      "FP": 2,
+      "TN": 2,
+      "missed": [
+        "08-dynamic.js"
+      ],
+      "false_positives": [
+        "09-unrelated-signature.py",
+        "10-unrelated-variant.py"
+      ]
+    },
+    "locations": [
+      {
+        "file": "01-sdk.ts",
+        "line": 1,
+        "rule": "sdk"
+      },
+      {
+        "file": "07-python.py",
+        "line": 1,
+        "rule": "sdk"
+      },
+      {
+        "file": "02-overlay.js",
+        "line": 1,
+        "rule": "checkout"
+      },
+      {
+        "file": "09-unrelated-signature.py",
+        "line": 2,
+        "rule": "webhook"
+      },
+      {
+        "file": "03-renewal.py",
+        "line": 3,
+        "rule": "webhook"
+      },
+      {
+        "file": "04-license.ts",
+        "line": 1,
+        "rule": "license"
+      },
+      {
+        "file": "10-unrelated-variant.py",
+        "line": 2,
+        "rule": "catalog"
+      },
+      {
+        "file": "05-catalog.ts",
+        "line": 1,
+        "rule": "catalog"
+      },
+      {
+        "file": "06-affiliate.js",
+        "line": 1,
+        "rule": "affiliate"
+      }
+    ],
+    "synthetic_private_value_in_output": false
+  },
+  "migration_check": {
+    "command": [
+      "python",
+      "-m",
+      "migration_check",
+      "scan",
+      "benchmarks/corpus"
+    ],
+    "interpreter_resolution": "Executed with sys.executable; absolute environment path omitted for portability",
+    "cwd": "repository root",
+    "delivery_checks": {
+      "cli_exit_code": 0,
+      "review_task_count": 15,
+      "all_tasks_have_action_and_basis": true,
+      "coverage_files_read": 12,
+      "source_excerpts_exported": false,
+      "verdict": "MANUAL_REVIEW_REQUIRED",
+      "synthetic_private_value_in_stdout_or_stderr": false
+    },
+    "metrics": {
+      "TP": 7,
+      "FN": 1,
+      "FP": 2,
+      "TN": 2,
+      "missed": [
+        "08-dynamic.js"
+      ],
+      "false_positives": [
+        "09-unrelated-signature.py",
+        "10-unrelated-variant.py"
+      ]
+    },
+    "locations": [
+      {
+        "file": "01-sdk.ts",
+        "line": 1,
+        "rule": "sdk"
+      },
+      {
+        "file": "02-overlay.js",
+        "line": 1,
+        "rule": "checkout"
+      },
+      {
+        "file": "03-renewal.py",
+        "line": 3,
+        "rule": "webhook"
+      },
+      {
+        "file": "04-license.ts",
+        "line": 1,
+        "rule": "license"
+      },
+      {
+        "file": "05-catalog.ts",
+        "line": 1,
+        "rule": "catalog"
+      },
+      {
+        "file": "06-affiliate.js",
+        "line": 1,
+        "rule": "affiliate"
+      },
+      {
+        "file": "07-python.py",
+        "line": 1,
+        "rule": "sdk"
+      },
+      {
+        "file": "09-unrelated-signature.py",
+        "line": 2,
+        "rule": "webhook"
+      },
+      {
+        "file": "10-unrelated-variant.py",
+        "line": 2,
+        "rule": "catalog"
+      }
+    ],
+    "synthetic_private_value_in_output": false
+  },
+  "pre_fix_scanner": {
+    "metrics": {
+      "TP": 6,
+      "FN": 2,
+      "FP": 2,
+      "TN": 2,
+      "missed": [
+        "07-python.py",
+        "08-dynamic.js"
+      ],
+      "false_positives": [
+        "09-unrelated-signature.py",
+        "10-unrelated-variant.py"
+      ]
+    },
+    "note": "Original scanner missed Python SDK import. Executed with the original regex branch (the added import branch removed); final scanner and same-rule rg include the fix."
+  },
+  "same_rule_location_parity": true,
+  "operator_workflow_not_user_test": {
+    "scanner": "One scan invocation emits categorized evidence, 15 review tasks, coverage metadata and JSON; add --html for the report in the same invocation. Human review is still mandatory.",
+    "keyword_rg": "One invocation yields locations and full source lines; human must categorize matches and construct review tasks.",
+    "same_rule_rg": "This reproducible wrapper uses six rg calls and deduplicates per category/file; equivalent matching can be consolidated into one call plus categorization. Add your own policy checklist/report for the same migration deliverable. No timed human-action claim."
+  }
+}

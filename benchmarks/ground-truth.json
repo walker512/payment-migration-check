@@ -1,0 +1,9 @@
+{
+  "description": "Synthetic fixture author labels, not real merchant ground truth. Each positive file has one intended integration category. Dynamic checkout is an intentional negative test for static discovery.",
+  "positives": {
+    "01-sdk.ts": "sdk", "02-overlay.js": "checkout", "03-renewal.py": "webhook",
+    "04-license.ts": "license", "05-catalog.ts": "catalog", "06-affiliate.js": "affiliate",
+    "07-python.py": "sdk", "08-dynamic.js": "checkout"
+  },
+  "negatives": ["09-unrelated-signature.py", "10-unrelated-variant.py", "11-comment.js", "12-clean.py"]
+}
