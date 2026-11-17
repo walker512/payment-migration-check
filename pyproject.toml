@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "payment-migration-check"
+version = "0.1.0"
+description = "Offline, evidence-linked Lemon Squeezy migration readiness scanner"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "walker512"}]
+dependencies = []
+
+[project.scripts]
+migration-check = "migration_check.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["migration_check*"]
