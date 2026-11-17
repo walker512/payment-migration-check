@@ -1,0 +1,1 @@
+LemonSqueezy.Url.Open(destination);

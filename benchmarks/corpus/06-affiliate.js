@@ -1,0 +1,1 @@
+lemonSqueezyAffiliate.trackVisit();
