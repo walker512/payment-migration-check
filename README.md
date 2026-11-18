@@ -74,7 +74,7 @@ Exit codes:
 - `0`: scan completed (still manual review required)
 - `2`: invalid input or output error
 - `3`: new integration candidates with `--fail-on-new`
-- `4`: incomplete assessment due to budget, unreadable/oversize or non-UTF-8 source; this takes precedence over `3`
+- `4`: incomplete assessment due to budget, unreadable/oversize or non-UTF-8 or NUL-containing source; this takes precedence over `3`
 
 Baselines must be trusted reports from the **same repository and same relative scan root**. Use a non-sensitive `--scope-id` label such as `shop/src` for both runs. The scanner rejects differing/missing scope labels and changed rule/filter/limit fingerprints. The label is your assertion; it cannot prove that two directories are the same repository. Do not reuse a label for unrelated roots. Moving between machines is allowed if scope and rules are unchanged. Old baselines without this metadata must be reviewed and regenerated.
 
@@ -119,3 +119,36 @@ Static identifiers can match comments or unrelated libraries. Generated links, r
 Contributions should add a minimal **synthetic** positive fixture, a negative fixture and regression tests. Do not submit raw merchant logs or customer data. Read [SECURITY.md](SECURITY.md) before sharing reports or scanning untrusted trees.
 
 MIT licensed. Public project identity: walker512.
+
+## Review a migration rescan (0.2.0)
+
+Use the same `--baseline` command above after editing the local source. JSON keeps
+schema version 1 and the existing `new_findings` array; an additive
+`baseline_comparison` object (comparison version 1) now contains `new`, `retained`
+(with `previous_line`), `not_observed_now`, the baseline bytes' SHA-256, both
+incomplete flags, and before/after/delta coverage counts. HTML shows the same
+review inventory. Lists are sorted by rule and file for repeatable comparison.
+
+**Not observed now is not fixed, migrated, or ready.** Code might have been
+renamed, deleted, excluded, made unreadable or changed beyond these heuristic
+rules. A changed coverage count prompts inspection; unchanged counts do not prove
+that the same files were examined. Source files are not hash-pinned and a rescan
+is not an atomic checkout snapshot. Both source trees and baseline must be trusted
+and stable. A baseline digest identifies bytes, not their author or truth.
+
+The new comparison requires valid coverage metadata and unique known-rule
+findings from the old schema-1 scanner; malformed or duplicate JSON is rejected
+with exit 2. An incomplete baseline is allowed but explicitly marked: it cannot
+establish a full pre-migration inventory. Only current incompleteness returns 4;
+normal exclusions remain disclosed rather than producing a new exit code.
+
+**Behavior change:** NUL-containing candidate source (including UTF-16 files) now
+returns existing exit code **4**, not 0, because it was not assessed as UTF-8.
+This takes precedence over new-candidate exit 3. There is no new exit code.
+Use UTF-8 source or explicitly review the missing coverage; do not suppress the
+warning to make a migration gate green. No provider API or payment test was run.
+
+This incremental correction was validated with 47 local Linux/Python 3.12 tests.
+Windows/macOS and real merchant migrations were not tested for this increment;
+historical CI evidence does not certify the new version. The HTML changes were
+checked as escaped, script-free markup, not through a real browser in this pass.

@@ -1,3 +1,17 @@
+## 0.2.0 rescan increment
+
+Local Linux/Python 3.12: 47 tests, zero skips. New regressions cover three-way
+file/rule differences, line moves, renames, exclusion changes, incomplete baseline
+warnings, private-path comparisons, malformed nested metadata, duplicate JSON,
+bounded baseline reads, FIFO rejection, escaped HTML and a real subprocess CLI
+UTF-16/binary failure with exit-4 precedence. An isolated offline wheel install
+and source-outside-directory CLI rescan were also exercised.
+
+No new Windows/macOS, provider sandbox, live payment, real merchant, accuracy
+benchmark or browser interaction claim. This is a review diff over heuristic
+inventories, not certification that missing candidates were successfully migrated.
+The historical evidence below describes 0.1.0 and is not a current CI result.
+
 # Validation evidence — 0.1.0
 
 ## Executed locally

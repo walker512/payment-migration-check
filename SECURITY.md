@@ -23,3 +23,14 @@ HTML escapes user-controlled strings, has no script/resources and includes a res
 ## Reporting vulnerabilities
 
 Do not publish secrets, real customer samples or exploit details in a public issue. Until private reporting is configured on the published repository, open an issue containing only a request for a private reporting channel. Use synthetic evidence for public bug reports. Never send card data, credentials or merchant exports to maintainers.
+
+## Rescan comparison
+
+Baseline reading uses an opened regular-file descriptor, an identity check and a
+16 MiB plus one-byte bounded read; final symlinks are refused where O_NOFOLLOW is
+available. Duplicate JSON, malformed used fields and duplicate findings fail
+closed. Only allowlisted finding fields are re-exported; arbitrary baseline labels
+or extra excerpts are not copied. Private-path baselines must use the scanner's
+pseudonym syntax. These checks do not authenticate a baseline or eliminate
+concurrent in-place changes, parent-directory races, or user-supplied private
+filenames. Scope labels and hashes are not signatures. Keep inputs stable.
