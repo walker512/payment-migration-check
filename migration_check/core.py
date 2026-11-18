@@ -51,7 +51,7 @@ def is_excluded(name: str) -> bool:
     return low.startswith(".") or low in {"package-lock.json", "yarn.lock", "pnpm-lock.yaml", "poetry.lock", "composer.lock"} or any(word in low for word in ("secret", "credential", "password", "token", "private_key"))
 
 
-def scan(root: Path, *, max_files: int = MAX_FILES, max_bytes: int = MAX_BYTES) -> dict:
+def scan(root: Path, *, max_files: int = MAX_FILES, max_bytes: int = MAX_BYTES, observed=None) -> dict:
     if root.is_symlink() or not root.is_dir():
         raise ValueError("Source must be a directory, not a symlink")
     root = root.resolve()
@@ -123,6 +123,8 @@ def scan(root: Path, *, max_files: int = MAX_FILES, max_bytes: int = MAX_BYTES) 
                 counts["unreadable_files"] += 1
                 continue
             relative = path.relative_to(root).as_posix()
+            if observed is not None:
+                observed(relative, raw)
             # One finding per rule per file, with first line, so a large generated
             # source cannot make report growth proportional to token repetitions.
             for key, label, pattern in COMPILED:

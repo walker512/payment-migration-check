@@ -152,3 +152,56 @@ This incremental correction was validated with 47 local Linux/Python 3.12 tests.
 Windows/macOS and real merchant migrations were not tested for this increment;
 historical CI evidence does not certify the new version. The HTML changes were
 checked as escaped, script-free markup, not through a real browser in this pass.
+
+## Compare assessed-file coverage without exporting new fingerprints
+
+Optional **local private inventories** distinguish changed/unchanged bytes among
+successfully assessed UTF-8 files, newly observed files, and files not observed
+again. This is separate from candidate-finding differences. A legacy baseline
+report has no inventory and cannot establish same-file coverage.
+
+```sh
+python -m migration_check scan project --scope-id shop --private-paths --coverage-state local-state-1.json --json first.json
+python -m migration_check scan project --scope-id shop --private-paths --coverage-state local-state-2.json --coverage-baseline local-state-1.json --baseline first.json --json second.json
+```
+
+Keep both local-state files **outside `project` and private**, not in Git, logs or
+shared reports. Each first state creates a random 256-bit key stored only inside
+that state; a later state reuses the supplied prior state's key. It stores keyed
+path/content digests but no paths or source bytes. Possession of the state also
+reveals its key and allows dictionary guesses and cross-scan correlation: it is
+not encrypted or anonymized. New states are exclusive 0600 files on POSIX; parent
+directories must be trusted. Windows ACLs have not been verified. No old file
+permissions change. Loss of a state means starting a new, incomparable chain;
+missing files, mismatched scope/policy, malformed states and legacy reports
+supplied as inventories fail closed before output. Version 2 states include a
+canonical SHA-256 consistency digest over version, key, scope, policy, files and
+completeness. A changed key or other field without a matching digest is rejected
+before comparison or output. Old version 1 states without this digest are rejected;
+start a new incomparable chain instead. Ordinary legacy finding baselines remain
+supported separately. This detects accidental damage, not malicious forgery:
+anyone can edit a state and recompute the digest. States are not authenticated
+and do not prove provenance; the digest is private and is not exported in reports.
+
+Only aggregate counts and completeness flags from this feature enter JSON/HTML;
+its keys, path identifiers and content fingerprints are never exported there.
+Without an explicit state the report says `not_comparable`. Existing
+`--private-paths` is still only a **stable, guessable path pseudonym**, not
+anonymity; the pre-existing explicit `--baseline` comparison still exports that
+report's SHA-256. Review all reports before sharing. This new feature does not
+retroactively remove historical report fields or identifiers.
+
+A missing file may have moved, become unreadable/unsupported, been excluded or
+fallen outside a budget. `not_observed_again` is never a deletion or repair
+verdict. Binary/non-UTF-8 bytes are not counted as assessed source, even when the
+older `files_read` counter includes those reads. Renames are new + not observed;
+whitespace edits count as changes. A scan is not a filesystem snapshot. Inventory
+hashing uses the exact bytes already assessed, never a second read. Unchanged
+bytes do not establish runtime behavior or a successful migration.
+
+At most 10,000 assessed records, 4 MiB state JSON; input acquisition is bounded
+by the existing 16 MiB reader before the tighter state limit. No automatic
+cleanup or multi-output transaction: a later I/O failure can leave an earlier
+private state/report, so check exit status and use fresh paths. The new Linux
+suite passes 64 tests (zero skips); no new hosted CI, provider sandbox or Windows
+run is claimed. Prior inaccessible CI queries are not part of this validation.
