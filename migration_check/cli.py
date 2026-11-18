@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 from . import __version__
 from .core import build_report, load_profile, scan
+from .comparison import compare, incomplete
 
 
 def render_html(report: dict) -> str:
@@ -19,9 +20,18 @@ def render_html(report: dict) -> str:
     rows = rows or '<tr><td colspan="4">No candidate identifiers found. This is not proof of no integration.</td></tr>'
     warnings = "".join(f'<li>{esc(w)}</li>' for w in report["warnings"])
     coverage = " · ".join(f'{esc(k.replace("_", " "))}: {v}' for k, v in report["coverage"].items())
+    comparison = report.get("baseline_comparison")
+    changes = ""
+    if comparison:
+        sections = []
+        for key, title in (("new", "New candidates"), ("retained", "Still observed"), ("not_observed_now", "Not observed now (not resolved)")):
+            items = "".join(f'<li>{esc(f["label"])} · {esc(f["file"])}:{esc(f["line"])}</li>' for f in comparison[key])
+            sections.append(f'<h3>{title}: {len(comparison[key])}</h3><ul>{items}</ul>')
+        coverage_rows = "".join(f'<li>{esc(k)}: {v["before"]} → {v["after"]} (delta {v["delta"]:+d})</li>' for k, v in comparison["coverage_changes"].items())
+        changes = f'<h2>Rescan review</h2><div class="notice">{esc(comparison["note"])}<br>Baseline incomplete: {comparison["baseline_incomplete"]}; current incomplete: {comparison["current_incomplete"]}</div>{"".join(sections)}<h3>Coverage changes</h3><ul>{coverage_rows}</ul>'
     return '''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>Payment Migration Check</title><style>
 :root{color-scheme:dark}body{font:16px/1.65 system-ui,sans-serif;background:#101923;color:#dce7ef;max-width:1080px;margin:48px auto;padding:0 24px}h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.1;color:#fff}h2{margin-top:40px}a{color:#77dec5}header p{max-width:750px}.eyebrow,.tag{color:#77dec5;font:12px/1.6 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.notice{border-left:4px solid #edbe6a;padding:16px 22px;background:#252a2f;border-radius:4px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:16px}article{background:#192531;border:1px solid #33424f;padding:24px;border-radius:12px}h3{margin:10px 0}small{color:#aebfcb}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;color:#9ed5c9}table{border-collapse:collapse;width:100%;font-size:14px}td,th{text-align:left;padding:10px;border-bottom:1px solid #33424f;overflow-wrap:anywhere}code{font-size:12px}.table{overflow:auto}footer{margin-top:40px;color:#aebfcb}@media print{body{background:white;color:black}article{break-inside:avoid;background:white;color:black}h1,h2,h3{color:black}}
-</style><header><div class="eyebrow">walker512 / offline readiness evidence</div><h1>Know what still needs moving.</h1><p>Local integration discovery and a human-review checklist for leaving Lemon Squeezy. No credentials. No provider writes. No automatic eligibility verdict.</p></header>''' + f'<div class="notice"><strong>Manual review required.</strong> No scan result certifies migration readiness. Policy snapshot: {esc(report["policy"]["verified_on"])}. {"RECHECK REQUIRED: snapshot is outside its 14-day freshness window." if report["policy"]["needs_recheck"] else "Recheck the official guide before acting."}<br><a href="{esc(report["policy"]["source"])}" rel="noreferrer">Official migration guide</a></div><h2>Evidence coverage</h2><p>{coverage}</p><ul>{warnings}</ul><div class="table"><table><thead><tr><th>Integration</th><th>File</th><th>Line</th><th>Meaning</th></tr></thead><tbody>{rows}</tbody></table></div><h2>Migration work queue</h2><div class="grid">{"".join(tasks)}</div><footer>{esc(report["privacy"]["note"])}<br>Generated {esc(report["generated_at"])} · v{esc(report["tool_version"])}</footer></html>'
+</style><header><div class="eyebrow">walker512 / offline readiness evidence</div><h1>Know what still needs moving.</h1><p>Local integration discovery and a human-review checklist for leaving Lemon Squeezy. No credentials. No provider writes. No automatic eligibility verdict.</p></header>''' + f'<div class="notice"><strong>Manual review required.</strong> No scan result certifies migration readiness. Policy snapshot: {esc(report["policy"]["verified_on"])}. {"RECHECK REQUIRED: snapshot is outside its 14-day freshness window." if report["policy"]["needs_recheck"] else "Recheck the official guide before acting."}<br><a href="{esc(report["policy"]["source"])}" rel="noreferrer">Official migration guide</a></div><h2>Evidence coverage</h2><p>{coverage}</p><ul>{warnings}</ul><div class="table"><table><thead><tr><th>Integration</th><th>File</th><th>Line</th><th>Meaning</th></tr></thead><tbody>{rows}</tbody></table></div>{changes}<h2>Migration work queue</h2><div class="grid">{"".join(tasks)}</div><footer>{esc(report["privacy"]["note"])}<br>Generated {esc(report["generated_at"])} · v{esc(report["tool_version"])}</footer></html>'
 
 
 def write_new(path: Path, text: str) -> None:
@@ -37,25 +47,8 @@ def identity(finding: dict) -> tuple:
 
 
 def compare_baseline(report: dict, path: Path) -> list:
-    if path.is_symlink() or not path.is_file() or path.stat().st_size > 16 * 1024 * 1024:
-        raise ValueError("Baseline must be a regular JSON report under 16 MiB")
-    old = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(old, dict) or old.get("schema_version") != 1 or not isinstance(old.get("findings"), list):
-        raise ValueError("Baseline must be a schema_version 1 report")
-    if not isinstance(old.get("privacy"), dict):
-        raise ValueError("Baseline must include privacy metadata")
-    if old["privacy"].get("paths_pseudonymized") != report["privacy"]["paths_pseudonymized"]:
-        raise ValueError("Baseline path privacy mode must match this scan")
-    if old.get("ruleset_fingerprint") != report["ruleset_fingerprint"]:
-        raise ValueError("Baseline rules or scan policy differ; review and regenerate baseline")
-    if not report.get("scope_id") or old.get("scope_id") != report["scope_id"]:
-        raise ValueError("Baseline scope differs or is missing; use the same explicit --scope-id for the same relative scan root")
-    known = set()
-    for finding in old["findings"]:
-        if not isinstance(finding, dict) or not isinstance(finding.get("rule"), str) or not isinstance(finding.get("file"), str):
-            raise ValueError("Malformed baseline finding")
-        known.add(identity(finding))
-    return [f for f in report["findings"] if identity(f) not in known]
+    # Keep the original helper's new-findings return contract.
+    return compare(report, path)["new"]
 
 
 def main(argv=None) -> int:
@@ -90,7 +83,8 @@ def main(argv=None) -> int:
         report = build_report(scan(args.source), profile, args.private_paths)
         report["scope_id"] = args.scope_id
         if args.baseline is not None:
-            report["new_findings"] = compare_baseline(report, args.baseline)
+            report["baseline_comparison"] = compare(report, args.baseline)
+            report["new_findings"] = report["baseline_comparison"]["new"]
         serialized = json.dumps(report, ensure_ascii=True, indent=2) + "\n"
         if args.json:
             write_new(args.json, serialized)
@@ -99,7 +93,7 @@ def main(argv=None) -> int:
         if args.html:
             write_new(args.html, render_html(report))
         print(f'Scanned {report["coverage"]["files_read"]} files; {len(report["findings"])} candidates. Manual review required.', file=sys.stderr)
-        if report["truncated"] or any(report["coverage"][key] for key in ("unreadable_files", "oversize_files", "non_utf8_files")):
+        if incomplete(report):
             return 4
         if args.fail_on_new and report.get("new_findings"):
             return 3
