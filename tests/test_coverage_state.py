@@ -16,7 +16,8 @@ class CoverageTests(unittest.TestCase):
     def setUp(self):
         self.t=tempfile.TemporaryDirectory();self.addCleanup(self.t.cleanup)
         self.root=Path(self.t.name);self.src=self.root/'src';self.src.mkdir()
-        (self.src/'app.py').write_text('createCheckout()\n')
+        # Byte-sensitive fixtures must not undergo platform newline conversion.
+        (self.src/'app.py').write_bytes(b'createCheckout()\n')
     def run_scan(self,*args):
         out=io.StringIO();err=io.StringIO()
         with contextlib.redirect_stdout(out),contextlib.redirect_stderr(err):
@@ -110,6 +111,31 @@ class CoverageTests(unittest.TestCase):
         (self.src/'app.py').write_text('different')
         same=Ledger('synthetic',ledger.state);same.observe('app.py',b'createCheckout()\n')
         self.assertEqual(same.summary()['unchanged'],1)
+    def test_real_cli_preserves_crlf_bytes_without_normalizing(self):
+        source=self.src/'app.py'
+        crlf=b'createCheckout()\r\n'
+        source.write_bytes(crlf)
+        prior,_=self.state('crlf-prior')
+        for index,payload in enumerate((crlf,b'createCheckout()\n')):
+            source.write_bytes(payload)
+            output=self.root/('crlf-next'+str(index))
+            result=subprocess.run([sys.executable,'-m','migration_check','scan',str(self.src),
+                '--scope-id','synthetic','--coverage-state',str(output),
+                '--coverage-baseline',str(prior)],capture_output=True,text=True,timeout=10)
+            self.assertEqual(result.returncode,0,result.stderr)
+            comparison=json.loads(result.stdout)['scan_coverage_comparison']
+            self.assertEqual(comparison['unchanged'],1 if index==0 else 0)
+            self.assertEqual(comparison['changed'],0 if index==0 else 1)
+            self.assertEqual(comparison['newly_observed'],0)
+            self.assertEqual(comparison['not_observed_again'],0)
+            self.assertEqual(source.read_bytes(),payload)
+        # Check the actual captured CRLF fingerprint independently of the CLI summary.
+        import hashlib
+        import hmac
+        state=load(prior)
+        expected=hmac.new(bytes.fromhex(state['key']),b'content\0'+crlf,hashlib.sha256).hexdigest()
+        self.assertEqual(list(state['files'].values()),[expected])
+
     def test_incomplete_scan_records_and_carries_warning(self):
         p,_=self.state('old')
         (self.src/'app.py').write_bytes(b'\0')
